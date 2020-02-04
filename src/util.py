@@ -22,7 +22,7 @@ def load_city_image():
     left = (width - IMAGE_SZ) / 2
     top = (height - IMAGE_SZ) / 2
     im = im.crop((left, top, left + IMAGE_SZ, top + IMAGE_SZ))
-    pix = np.array(im)
+    pix = np.array(im, dtype=np.float16)
     assert pix.shape == (IMAGE_SZ, IMAGE_SZ, 3)
     return pix[np.newaxis] / 255.0 # Need to normalize images to [0, 1]
 
@@ -35,10 +35,10 @@ def load_images(in_PATH, verbose=False):
             print('Processing %s' % filename)
         full_filename = os.path.join(os.path.abspath(in_PATH), filename)
         img = Image.open(full_filename).convert('RGB')
-        pix = np.array(img)
+        pix = np.array(img, dtype=np.float16)
         pix_norm = pix / 255.0
         imgs.append(pix_norm)
-    return np.array(imgs)
+    return np.array(imgs, dtype=np.float16)
 
 # Reads in all the images in a directory and saves them to an .npy file.
 def compile_images(in_PATH, out_PATH):
