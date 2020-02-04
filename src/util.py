@@ -49,11 +49,11 @@ def compile_images(in_PATH, out_PATH):
 # Returns: numpy array of size (m, IMAGE_SZ, IMAGE_SZ, 4)
 def preprocess_images_outpainting(imgs, crop=True):
     m = imgs.shape[0]
-    imgs = np.array(imgs, copy=True)
+    imgs = np.array(imgs, copy=True, dtype=np.float16)
     pix_avg = np.mean(imgs, axis=(1, 2, 3))
     if crop:
         imgs[:, :, :int(2 * IMAGE_SZ / 8), :] = imgs[:, :, int(-2 * IMAGE_SZ / 8):, :] = pix_avg[:, np.newaxis, np.newaxis, np.newaxis]
-    mask = np.zeros((m, IMAGE_SZ, IMAGE_SZ, 1))
+    mask = np.zeros((m, IMAGE_SZ, IMAGE_SZ, 1), dtype=np.float16)
     mask[:, :, :int(2 * IMAGE_SZ / 8), :] = mask[:, :, int(-2 * IMAGE_SZ / 8):, :] = 1.0
     imgs_p = np.concatenate((imgs, mask), axis=3)
     return imgs_p
@@ -61,12 +61,12 @@ def preprocess_images_outpainting(imgs, crop=True):
 # Expands and preprocesses a single (h, w, 3) image for image outpainting.
 # Returns: numpy array of size (h, w + 2 * dw, 4)
 def preprocess_images_gen(img):
-    img = np.array(img, copy=True)
+    img = np.array(img, copy=True, dtype=np.float16)
     pix_avg = np.mean(img)
     dw = int(2 * IMAGE_SZ / 8) # Amount that will be outpainted on each side
     img_expand = np.ones((img.shape[0], img.shape[1] + 2 * dw, img.shape[2])) * pix_avg
     img_expand[:, dw:-dw, :] = img
-    mask = np.zeros((img_expand.shape[0], img_expand.shape[1], 1))
+    mask = np.zeros((img_expand.shape[0], img_expand.shape[1], 1), dtype=np.float16)
     mask[:, :int(2 * IMAGE_SZ / 8), :] = mask[:, int(-2 * IMAGE_SZ / 8):, :] = 1.0
     img_p = np.concatenate((img_expand, mask), axis=2)
     return img_p[np.newaxis]
@@ -264,11 +264,11 @@ def create_GIF(in_PATH, prefix, out_PATH):
 
 # Compute the RMSE between a ground truth and outpainted image.
 def compute_RMSE(image_gt_PATH, image_o_PATH):
-    im_gt = np.array(Image.open(image_gt_PATH).convert('RGB')).astype(np.float64)
-    im_o = np.array(Image.open(image_o_PATH).convert('RGB')).astype(np.float64)
+    im_gt = np.array(Image.open(image_gt_PATH).convert('RGB')).astype(np.float16)
+    im_o = np.array(Image.open(image_o_PATH).convert('RGB')).astype(np.float16)
     assert im_gt.shape == (128, 128, 3)
     assert im_o.shape == (128, 128, 3)
-    M = np.ones((128, 128, 3))
+    M = np.ones((128, 128, 3), dtype=np.float16)
     M[:, 32:96, :] = 0
     num_pixels = 128 * 64 * 3
     return np.sqrt(np.sum(((im_gt - im_o) * M) ** 2) / num_pixels)
